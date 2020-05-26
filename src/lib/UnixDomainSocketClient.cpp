@@ -144,6 +144,7 @@ void UnixDomainSocketClient::EpollHandler() {
           }
           // read ok
           // TODO : 긴 데이터에 대한 처리 할것 , Read가 계속적으로 발생가능 알아서 처리
+          message[read_size] = '\0';
           if (callback_proc_)
             callback_proc_(message);
         }

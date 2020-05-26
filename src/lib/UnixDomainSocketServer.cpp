@@ -22,12 +22,13 @@ constexpr int kMAX_CONNECTION_COUNT = 1;
 
 UnixDomainSocketServer::UnixDomainSocketServer()
     : accept_checker_fd_(-1), epoll_fd_(-1), server_addr_({0,}), stopped_(false) {
+  memset(&server_addr_, 0, sizeof(server_addr_));
   server_addr_.sun_family = AF_UNIX;
   strcpy(server_addr_.sun_path, kFILE_NAME);
 }
 
 UnixDomainSocketServer::~UnixDomainSocketServer() {
-  Finalize();
+
 }
 
 bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ResponseCallback) {
@@ -39,21 +40,25 @@ bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ResponseCallback)
 
   int socket = -1;
   if (!SocketWrapper::Create(socket)) {
+    std::cout << "Socket Create Failed" << std::endl;
     return false;
   }
   accept_checker_fd_ = socket;
+  printf ("Accept Check fd : %d\n",accept_checker_fd_ );
+  //async_message_callback_ = callback;
 
   if (!SocketWrapper::Bind(accept_checker_fd_, server_addr_)) {
+    std::cout << "Socket Bind Failed :" << errno << std::endl;
     return false;
   }
   if (!SocketWrapper::Listen(accept_checker_fd_, 5)) {
+    std::cout << "Socket Listen Failed" << std::endl;
     return false;
   }
-  int epoll_fd = -1;
   if (!EpollWrapper::EpollCreate(1, true, epoll_fd_)) {
+    std::cout << "Epoll Create Failed" << std::endl;
     return false;
   }
-  epoll_fd_ = epoll_fd;
 
   client_socket_list_.assign(kMAX_CONNECTION_COUNT, 0); // TODO: 커넥션 확장성 고려
 
@@ -73,9 +78,11 @@ bool UnixDomainSocketServer::StartEpollThread() {
   bool result = false;
 
   if (epoll_thread_.get() && epoll_thread_->joinable()) {
+    printf("already exist\n");
     return true;
   }
   try {
+    printf("start thread -1\n");
     epoll_thread_.reset(new std::thread(&UnixDomainSocketServer::EpollHandler, std::ref(*this)));
     result = true;
   } catch (std::exception &ex) {
@@ -101,10 +108,13 @@ void UnixDomainSocketServer::StopEpollThread() {
   }
 }
 void UnixDomainSocketServer::EpollHandler() {
+  std::cout << "~~~~~EpollHandler ~~~~~~~" << std::endl;
+
   if (!EpollWrapper::EpollControll(epoll_fd_,
                                    accept_checker_fd_,
                                    EPOLLIN | EPOLLOUT | EPOLLERR,
                                    EPOLL_CTL_ADD)) {
+    std::cout << "epoll add failed" << std::endl;
     return;
   }
   int errorCount = 0;
@@ -127,14 +137,17 @@ void UnixDomainSocketServer::EpollHandler() {
         {
           int client_socket = 0;
           if (!SocketWrapper::Accept(client_socket, accept_checker_fd_, server_addr_)) {
+            std::cout << "Socket Accept Failed" << std::endl;
             continue;
           } else { //  accept ok
             client_socket_list_[0] = client_socket;
 
+            std::cout << "Socket Accept Called" << std::endl;
             if (!EpollWrapper::EpollControll(epoll_fd_,
                                              client_socket,
                                              EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLET,
                                              EPOLL_CTL_ADD)) {
+              std::cout << "epoll add failed" << std::endl;
               continue;
             }
           }
@@ -152,12 +165,14 @@ void UnixDomainSocketServer::EpollHandler() {
           }
           // Read data ok
           // TODO : 긴 데이터에 대한 처리 할것 , Read가 계속적으로 발생가능 알아서 처리
+          message[read_size] = '\0';
           if (callback_proc_)
             callback_proc_(message);
         }
       }
     }
   }
+  printf("bye bye~");
 }
 
 bool UnixDomainSocketServer::SendMessage(std::string &send_string) {

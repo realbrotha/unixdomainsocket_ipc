@@ -13,14 +13,12 @@ int main(int argc, char *argv[]) {
   while (1)
   {
     char buff[1024] = { 0,};
-    printf ("scanfffff");
     scanf("%s",buff);
     std::string send(buff);
     if (send == "exit") {
       core_.Finalize();
       break;
     }
-    printf ("Send da \n");
     core_.SendMessage(send);
   }
 }

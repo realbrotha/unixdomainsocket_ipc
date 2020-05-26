@@ -15,10 +15,10 @@ UnixDomainSocketCore::~UnixDomainSocketCore() {
 
 bool UnixDomainSocketCore::Initialize(t_ListenerCallbackProc ResponseCallback, bool server_mode) {
   if (server_mode) {
-    printf ("Core::Init server");
+    printf ("Core::Init server\n\n");
     soeket_core_.reset(new UnixDomainSocketServer());
   } else {
-    printf ("Core::Init client");
+    printf ("Core::Init client\n\n");
     soeket_core_.reset(new UnixDomainSocketClient());
   }
   soeket_core_->Initialize(ResponseCallback);
