@@ -20,7 +20,11 @@
 Header -> UnixDomainSocketCore.h
 1. Initialze(콜백 포인터 /*리스브용 */, bool /*server or client )  
 2. SendMessage (데이타~)
+![play](./play.png)
 ## 간단 흐름 
 ![flow](./flow.png)
+
+
+
 
 
