@@ -7,13 +7,19 @@
 
 #define PURE 0
 
+#include <string>
+#include <array>
+
+typedef void (*t_ListenerCallbackProc)(std::array<char, 1024> message);
+
 class UnixDomainSocketFactoryBase {
  public :
   UnixDomainSocketFactoryBase() {}
   virtual ~UnixDomainSocketFactoryBase() {}
 
-  virtual bool Initialize() = PURE;
-  virtual bool Finalize() = PURE;
+  virtual bool SendMessage(std::string &send_string) = PURE;
+  virtual bool Initialize(t_ListenerCallbackProc ResponseCallback) = PURE;
+  virtual void Finalize() = PURE;
 };
 
 #endif //TESTIPC_UNIXDOMAINSOCKET_SRC_UNIXDOMAINSOKET_LIB_UNIXDOMAINSOCKETFACTORYBASE_H_

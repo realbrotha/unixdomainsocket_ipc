@@ -9,13 +9,17 @@
 
 #include <thread>
 
+// TODO : Class 뎁스가 깊어져서 Impl pImpl형태로 만드는게 좋을듯, Method 하나가 추가될때마다 클래스 수정이 많다.
+
 class UnixDomainSocketCore {
  public :
   UnixDomainSocketCore();
   ~UnixDomainSocketCore();
 
-  bool Initialize(bool server_mode = false);
+  bool Initialize(t_ListenerCallbackProc ResponseCallback, bool server_mode = false);
   bool Finalize();
+
+  bool SendMessage(std::string data);
  private:
 
   std::unique_ptr<UnixDomainSocketFactoryBase> soeket_core_;

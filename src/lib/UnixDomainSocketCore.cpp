@@ -13,7 +13,7 @@ UnixDomainSocketCore::~UnixDomainSocketCore() {
 
 }
 
-bool UnixDomainSocketCore::Initialize(bool server_mode) {
+bool UnixDomainSocketCore::Initialize(t_ListenerCallbackProc ResponseCallback, bool server_mode) {
   if (server_mode) {
     printf ("Core::Init server");
     soeket_core_.reset(new UnixDomainSocketServer());
@@ -21,7 +21,7 @@ bool UnixDomainSocketCore::Initialize(bool server_mode) {
     printf ("Core::Init client");
     soeket_core_.reset(new UnixDomainSocketClient());
   }
-  soeket_core_->Initialize();
+  soeket_core_->Initialize(ResponseCallback);
 }
 bool UnixDomainSocketCore::Finalize() {
   if (soeket_core_.get()) {
@@ -30,4 +30,13 @@ bool UnixDomainSocketCore::Finalize() {
   soeket_core_.reset();
 
   return false;
+}
+
+bool UnixDomainSocketCore::SendMessage(std::string data) {
+  bool result = false;
+  if (soeket_core_.get()) {
+    soeket_core_->SendMessage(data);
+    result = true;
+  }
+  return result;
 }
