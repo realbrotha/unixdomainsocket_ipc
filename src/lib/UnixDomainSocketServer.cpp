@@ -32,7 +32,8 @@ UnixDomainSocketServer::~UnixDomainSocketServer() {
 }
 
 bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ResponseCallback) {
-  callback_proc_ = ResponseCallback;
+  callback_proc_ = std::move(ResponseCallback);
+  //callback_proc_ = ResponseCallback;
 
   if (0 == access(kFILE_NAME, F_OK)) {
     unlink(kFILE_NAME);

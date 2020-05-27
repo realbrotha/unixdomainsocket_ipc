@@ -23,7 +23,7 @@ UnixDomainSocketClient::~UnixDomainSocketClient() {
 }
 
 bool UnixDomainSocketClient::Initialize(t_ListenerCallbackProc ResponseCallback) {
-  callback_proc_ = ResponseCallback;
+  callback_proc_ = std::move(ResponseCallback);
 
   int socket_fd = -1;
   if (!SocketWrapper::Create(socket_fd)) {

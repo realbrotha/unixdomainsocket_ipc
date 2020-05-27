@@ -9,8 +9,10 @@
 
 #include <string>
 #include <array>
+#include <functional>
 
-typedef void (*t_ListenerCallbackProc)(std::array<char, 1024> message);
+//typedef void (*t_ListenerCallbackProc)(std::array<char, 1024> message);
+typedef std::function<void(std::array<char, 1024> message)> t_ListenerCallbackProc;
 
 class UnixDomainSocketFactoryBase {
  public :
