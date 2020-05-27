@@ -166,8 +166,6 @@ void UnixDomainSocketClient::EpollHandler() {
       continue;
     }
   }
-  std::cout << "Client EpollHandler Thread!!!! END OF Thread" << std::endl;
-  pthread_exit(NULL);
 }
 
 bool UnixDomainSocketClient::SendMessage(std::string &send_string) {
