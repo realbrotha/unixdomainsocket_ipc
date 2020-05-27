@@ -9,19 +9,23 @@
 #define EXPORT extern "C" __attribute__ ((visibiliity("default")))
 #define NOEXCEPT throw()
 
-EXPORT bool Initialize(t_ListenerCallbackProc ResponseCallback) NOEXCEPT;
+EXPORT bool Initialize(t_ListenerCallbackProc ConnectCallback,
+                       t_ListenerCallbackProc DisconnectCallback,
+                       t_ListenerCallbackProc ReadCallback) NOEXCEPT;
 EXPORT bool Finalize() NOEXCEPT;
 
 std::shared_ptr<UnixDomainSocketCore> g_socket_core;
 
-EXPORT bool Initialize(t_ListenerCallbackProc ResponseCallback) NOEXCEPT {
+EXPORT bool Initialize(t_ListenerCallbackProc ConnectCallback,
+                       t_ListenerCallbackProc DisconnectCallback,
+                       t_ListenerCallbackProc ReadCallback) NOEXCEPT {
   //do something;
   if (g_socket_core.get()) {
     return true;
   }
   try {
     g_socket_core.reset(new UnixDomainSocketCore());
-    g_socket_core->Initialize(ResponseCallback);
+    g_socket_core->Initialize(ConnectCallback, DisconnectCallback, ReadCallback );
   } catch (const std::exception &ex) {
     printf ("Exception 1~.");
   } catch ( ... ) {

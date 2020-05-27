@@ -31,9 +31,15 @@ UnixDomainSocketServer::~UnixDomainSocketServer() {
 
 }
 
-bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ResponseCallback) {
-  callback_proc_ = std::move(ResponseCallback);
-  //callback_proc_ = ResponseCallback;
+bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ConnectCallback,
+                                        t_ListenerCallbackProc DisconnectCallback,
+                                        t_ListenerCallbackProc ReadCallback) {
+  if (ConnectCallback)
+    connect_callback_proc_ = std::move(ConnectCallback);
+  if (DisconnectCallback)
+    disconnect_callback_proc_ = std::move(DisconnectCallback);
+  if (ReadCallback)
+    read_callback_proc_ = std::move(ReadCallback);
 
   if (0 == access(kFILE_NAME, F_OK)) {
     unlink(kFILE_NAME);
@@ -134,6 +140,8 @@ void UnixDomainSocketServer::EpollHandler() {
     if (event_count > 0) // 이벤트 떨어짐.  event_count = 0 처리안함.
     {
       for (int i = 0; i < event_count; ++i) {
+        std::array<char, kMAX_READ_SIZE> message;
+
         if (gettingEvent[i].data.fd == accept_checker_fd_) // accept check
         {
           int client_socket = 0;
@@ -142,6 +150,13 @@ void UnixDomainSocketServer::EpollHandler() {
             continue;
           } else { //  accept ok
             client_socket_list_[0] = client_socket;
+
+            std::string connect_signal= "connect";
+            std::copy(connect_signal.begin(), connect_signal.end(), message.begin());
+            message[connect_signal.length()] = '\0';
+
+            if (connect_callback_proc_)
+              connect_callback_proc_(message);
 
             std::cout << "Socket Accept Called" << std::endl;
             if (!EpollWrapper::EpollControll(epoll_fd_,
@@ -153,11 +168,18 @@ void UnixDomainSocketServer::EpollHandler() {
             }
           }
         } else { // accept 가 처리된 구들.
-          std::array<char, kMAX_READ_SIZE> message;
           int read_size = read( gettingEvent[i].data.fd, message.data(), message.size());
           if (read_size < 0) {   // read 0
             continue;
           } else if (read_size == 0) { // Disconnect
+
+            std::string connect_signal= "disconnect";
+            std::copy(connect_signal.begin(), connect_signal.end(), message.begin());
+            message[connect_signal.length()] = '\0';
+
+            if (disconnect_callback_proc_)
+              disconnect_callback_proc_(message);
+
             EpollWrapper::EpollControll(epoll_fd_,
                                         gettingEvent[i].data.fd,
                                         EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLET,
@@ -167,8 +189,8 @@ void UnixDomainSocketServer::EpollHandler() {
           // Read data ok
           // TODO : 긴 데이터에 대한 처리 할것 , Read가 계속적으로 발생가능 알아서 처리
           message[read_size] = '\0';
-          if (callback_proc_)
-            callback_proc_(message);
+          if (read_callback_proc_)
+            read_callback_proc_(message);
         }
       }
     }

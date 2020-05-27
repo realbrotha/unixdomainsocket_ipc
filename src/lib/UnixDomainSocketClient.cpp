@@ -22,8 +22,15 @@ UnixDomainSocketClient::~UnixDomainSocketClient() {
   Finalize();
 }
 
-bool UnixDomainSocketClient::Initialize(t_ListenerCallbackProc ResponseCallback) {
-  callback_proc_ = std::move(ResponseCallback);
+bool UnixDomainSocketClient::Initialize(t_ListenerCallbackProc ConnectCallback,
+                                        t_ListenerCallbackProc DisconnectCallback,
+                                        t_ListenerCallbackProc ReadCallback) {
+  if (ConnectCallback)
+    connect_callback_proc_ = std::move(ConnectCallback);
+  if (DisconnectCallback)
+    disconnect_callback_proc_ = std::move(DisconnectCallback);
+  if (ReadCallback)
+    read_callback_proc_ = std::move(ReadCallback);
 
   int socket_fd = -1;
   if (!SocketWrapper::Create(socket_fd)) {
@@ -88,6 +95,8 @@ void UnixDomainSocketClient::EpollHandler() {
 
   while (!stopped_) {
     if (client_socket_fd_ < 0) { // socket을 생성하고 connection 시킴,
+
+
       if (SocketWrapper::Create(client_socket_fd_)) {      // 클라이언트 입장에서 이짓을 하는게 맞는가 싶다. 접속중에 Server가 사라지면 대기를 위함.
         FileDescriptorTool::SetCloseOnExec(client_socket_fd_, true);
         FileDescriptorTool::SetNonBlock(client_socket_fd_, true);
@@ -100,6 +109,15 @@ void UnixDomainSocketClient::EpollHandler() {
     if (!isConnected_) { // socket을 생성하고 connection 시킴
       if (SocketWrapper::Connect(client_socket_fd_, server_addr_)) { // socket connect ok
         isConnected_ = true;
+
+        std::array<char, kMAX_READ_SIZE> message;
+        std::string connect_signal= "connect";
+        std::copy(connect_signal.begin(), connect_signal.end(), message.begin());
+        message[connect_signal.length()] = '\0';
+
+        if (connect_callback_proc_)
+          connect_callback_proc_(message);
+
       } else { // socket failed
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         continue;
@@ -138,15 +156,16 @@ void UnixDomainSocketClient::EpollHandler() {
             std::string end_signal= "disconnect";
             std::copy(end_signal.begin(), end_signal.end(), message.begin());
             message[end_signal.length()] = '\0';
-            if (callback_proc_) // disconnect signal
-              callback_proc_(message);
+
+            if (disconnect_callback_proc_) // disconnect signal
+              disconnect_callback_proc_(message);
             continue;
           }
           // read ok
           // TODO : 긴 데이터에 대한 처리 할것 , Read가 계속적으로 발생가능 알아서 처리
           message[read_size] = '\0';
-          if (callback_proc_)
-            callback_proc_(message);
+          if (read_callback_proc_)
+            read_callback_proc_(message);
         }
       }
     }

@@ -19,7 +19,9 @@ class UnixDomainSocketServer : public UnixDomainSocketFactoryBase {
   UnixDomainSocketServer();
   virtual ~UnixDomainSocketServer();
 
-  virtual bool Initialize(t_ListenerCallbackProc ResponseCallback) final;
+  virtual bool Initialize(t_ListenerCallbackProc ConnectCallback,
+                          t_ListenerCallbackProc DisconnectCallback,
+                          t_ListenerCallbackProc ReadCallback) final;
   virtual void Finalize() final;
 
   virtual bool SendMessage(std::string &send_string);
@@ -32,7 +34,10 @@ class UnixDomainSocketServer : public UnixDomainSocketFactoryBase {
   int epoll_fd_;
   int accept_checker_fd_;
   struct sockaddr_un server_addr_;
-  t_ListenerCallbackProc callback_proc_;
+
+  t_ListenerCallbackProc connect_callback_proc_;
+  t_ListenerCallbackProc disconnect_callback_proc_;
+  t_ListenerCallbackProc read_callback_proc_;
 
   std::atomic<bool> stopped_;
   std::vector <int> client_socket_list_;
