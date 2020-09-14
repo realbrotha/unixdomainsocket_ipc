@@ -15,7 +15,7 @@ void DisConnectCallbackPtr(std::array<char, 1024> message) {
 int main(int argc, char *argv[]) {
   UnixDomainSocketCore core_;
 
-  core_.Initialize(ConnectCallbackPtr, DisConnectCallbackPtr, ReadbackPtr, false);
+  core_.Initialize(ConnectCallbackPtr, DisConnectCallbackPtr, ReadbackPtr, false,0x01);
 
   while (1)
   {

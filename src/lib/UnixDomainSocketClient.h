@@ -25,18 +25,24 @@ class UnixDomainSocketClient : public UnixDomainSocketFactoryBase {
 
   virtual bool Initialize(t_ListenerCallbackProc ConnectCallback,
                           t_ListenerCallbackProc DisconnectCallback,
-                          t_ListenerCallbackProc ReadCallback) final;
+                          t_ListenerCallbackProc ReadCallback,
+                          int product_code) final;
   virtual void Finalize() final;
 
   virtual bool SendMessage(std::string &send_string);
+  virtual bool SendMessage(int product_code, std::string &send_string);
 
  private :
+  bool SendServerHello();
+  int product_code_;
+  int seq_id_;
+
   void EpollHandler();
   bool StartEpollThread();
   void StopEpollThread();
 
   int epoll_fd_;
-  int client_socket_fd_;
+  int server_socket_fd_;
   struct sockaddr_un server_addr_;
 
   t_ListenerCallbackProc connect_callback_proc_;

@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(MODULE_NAME uds_lib)
 
 set(SOURCES
+        ConnectionManager.cpp
         UnixDomainSocketExport.cpp
         UnixDomainSocketClient.cpp
         UnixDomainSocketServer.cpp

@@ -6,7 +6,7 @@
 #include "EpollWrapper.h"
 #include "SocketWrapper.h"
 #include "FileDescriptorTool.h"
-
+#include "MessageDefine.hpp"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,7 +33,8 @@ UnixDomainSocketServer::~UnixDomainSocketServer() {
 
 bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ConnectCallback,
                                         t_ListenerCallbackProc DisconnectCallback,
-                                        t_ListenerCallbackProc ReadCallback) {
+                                        t_ListenerCallbackProc ReadCallback,
+                                        int product_code) {
   if (ConnectCallback)
     connect_callback_proc_ = std::move(ConnectCallback);
   if (DisconnectCallback)
@@ -178,6 +179,7 @@ void UnixDomainSocketServer::EpollHandler() {
           if (read_size < 0) {   // read 0
             continue;
           } else if (read_size == 0) { // Disconnect
+            ConnectionManager::GetInstance().Remove(gettingEvent[i].data.fd);
 
             std::string connect_signal= "disconnect";
             std::copy(connect_signal.begin(), connect_signal.end(), message.begin());
@@ -195,6 +197,20 @@ void UnixDomainSocketServer::EpollHandler() {
           // Read data ok
           // TODO : 긴 데이터에 대한 처리 할것 , Read가 계속적으로 발생가능 알아서 처리
           message[read_size] = '\0';
+          std::vector<char> buffer;
+          buffer.assign(message.begin(), message.begin() + read_size);
+          IpcJsonMessage msg;
+          msg.Deserialize(buffer);
+
+          if (msg.msg_id == 0 &&
+              msg.msg_type == 0 &&
+              msg.json_string == "hi~there") {
+            printf ("hello complete\n");
+            ConnectionManager::GetInstance().Add(msg.src, gettingEvent[i].data.fd);
+            //client_socket_list_[msg.src] = gettingEvent[i].data.fd;
+            continue;
+          }
+
           if (read_callback_proc_)
             read_callback_proc_(message);
         }

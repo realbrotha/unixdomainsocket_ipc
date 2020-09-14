@@ -4,9 +4,17 @@
 #include <unistd.h>
 #include <array>
 #include <functional>
-
+#include <vector>
+#include "MessageDefine.hpp"
 void ReadbackPtr(std::array<char, 1024> message) {
-  printf ("read recv [%s]\n",message.data());
+  printf("ReadbackPtr Server\n");
+  std::vector <char> buffer;
+  buffer.assign(message.begin(), message.end());
+
+  IpcJsonMessage ipc_;
+  ipc_.Deserialize(buffer);
+
+  printf ("read recv [%s]\n",ipc_.json_string.c_str());
 }
 void ConnectCallbackPtr(std::array<char, 1024> message) {
   printf ("connect recv [%s]\n",message.data());
@@ -18,6 +26,7 @@ void DisConnectCallbackPtr(std::array<char, 1024> message) {
 
 int main(int argc, char *argv[]) {
   printf ("11111\n");
+  /*
   IpcJsonMessage msg;
   msg.msg_type =11;
   msg.msg_id =22;
@@ -36,8 +45,8 @@ int main(int argc, char *argv[]) {
   printf ("finish");
 
   return 1;
+*/
 
-  /*
   UnixDomainSocketCore core_;
   core_.Initialize(ConnectCallbackPtr, DisConnectCallbackPtr, ReadbackPtr, true);
 
@@ -52,5 +61,4 @@ int main(int argc, char *argv[]) {
     }
     core_.SendMessage(send);
   }
-   */
 }

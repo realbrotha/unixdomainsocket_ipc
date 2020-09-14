@@ -18,7 +18,7 @@ class UnixDomainSocketCore {
 
   bool Initialize(t_ListenerCallbackProc ConnectCallback,
                   t_ListenerCallbackProc DisconnectCallback,
-                  t_ListenerCallbackProc ReadCallback, bool server_mode = false);
+                  t_ListenerCallbackProc ReadCallback, bool server_mode = false, int product_code = 0);
   bool Finalize();
 
   bool SendMessage(std::string data);

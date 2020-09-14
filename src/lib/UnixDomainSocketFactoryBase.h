@@ -22,7 +22,8 @@ class UnixDomainSocketFactoryBase {
   virtual bool SendMessage(std::string &send_string) = PURE;
   virtual bool Initialize(t_ListenerCallbackProc ConnectCallback,
                           t_ListenerCallbackProc DisconnectCallback,
-                          t_ListenerCallbackProc ReadCallback) = PURE;
+                          t_ListenerCallbackProc ReadCallback,
+                          int product_code = 0) = PURE;
   virtual void Finalize() = PURE;
 };
 

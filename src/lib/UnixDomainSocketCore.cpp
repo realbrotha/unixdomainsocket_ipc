@@ -15,7 +15,7 @@ UnixDomainSocketCore::~UnixDomainSocketCore() {
 
 bool UnixDomainSocketCore::Initialize(t_ListenerCallbackProc ConnectCallback,
                                       t_ListenerCallbackProc DisconnectCallback,
-                                      t_ListenerCallbackProc ReadCallback, bool server_mode) {
+                                      t_ListenerCallbackProc ReadCallback, bool server_mode, int product_code) {
   if (server_mode) {
     printf ("Core::Init server\n\n");
     soeket_core_.reset(new UnixDomainSocketServer());
@@ -23,7 +23,7 @@ bool UnixDomainSocketCore::Initialize(t_ListenerCallbackProc ConnectCallback,
     printf ("Core::Init client\n\n");
     soeket_core_.reset(new UnixDomainSocketClient());
   }
-  soeket_core_->Initialize(ConnectCallback, DisconnectCallback, ReadCallback);
+  soeket_core_->Initialize(ConnectCallback, DisconnectCallback, ReadCallback, product_code);
 }
 bool UnixDomainSocketCore::Finalize() {
   if (soeket_core_.get()) {

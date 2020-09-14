@@ -6,6 +6,7 @@
 #define TESTIPC_UNIXDOMAINSOCKET_SRC_UNIXDOMAINSOKET_LIB_UNIXDOMAINSOCKETSERVER_H_
 
 #include "UnixDomainSocketFactoryBase.h"
+#include "ConnectionManager.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -22,7 +23,8 @@ class UnixDomainSocketServer : public UnixDomainSocketFactoryBase {
 
   virtual bool Initialize(t_ListenerCallbackProc ConnectCallback,
                           t_ListenerCallbackProc DisconnectCallback,
-                          t_ListenerCallbackProc ReadCallback) final;
+                          t_ListenerCallbackProc ReadCallback,
+                          int product_code = 0) final;
   virtual void Finalize() final;
 
   virtual bool SendMessage(std::string &send_string);
