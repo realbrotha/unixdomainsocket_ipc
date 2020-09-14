@@ -13,6 +13,7 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <map>
 
 class UnixDomainSocketServer : public UnixDomainSocketFactoryBase {
  public :
@@ -40,7 +41,7 @@ class UnixDomainSocketServer : public UnixDomainSocketFactoryBase {
   t_ListenerCallbackProc read_callback_proc_;
 
   std::atomic<bool> stopped_;
-  std::vector <int> client_socket_list_;
+  std::map<int, int> client_socket_list_;
   std::unique_ptr<std::thread> epoll_thread_;
 };
 

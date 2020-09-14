@@ -54,24 +54,29 @@ bool UnixDomainSocketServer::Initialize(t_ListenerCallbackProc ConnectCallback,
   printf ("Accept Check fd : %d\n",accept_checker_fd_ );
   //async_message_callback_ = callback;
 
-  if (!SocketWrapper::Bind(accept_checker_fd_, server_addr_)) {
-    std::cout << "Socket Bind Failed :" << errno << std::endl;
-    return false;
-  }
-  if (!SocketWrapper::Listen(accept_checker_fd_, 5)) {
-    std::cout << "Socket Listen Failed" << std::endl;
-    return false;
-  }
-  if (!EpollWrapper::EpollCreate(1, true, epoll_fd_)) {
-    std::cout << "Epoll Create Failed" << std::endl;
-    return false;
-  }
+  bool result = false;
 
-  client_socket_list_.assign(kMAX_CONNECTION_COUNT, 0); // TODO: 커넥션 확장성 고려
+  do {
+    if (!SocketWrapper::Bind(accept_checker_fd_, server_addr_)) {
+      std::cout << "Socket Bind Failed :" << errno << std::endl;
+      break;
+    }
+    if (!SocketWrapper::Listen(accept_checker_fd_, 5)) {
+      std::cout << "Socket Listen Failed" << std::endl;
+      break;
+    }
+    if (!EpollWrapper::EpollCreate(1, true, epoll_fd_)) {
+      std::cout << "Epoll Create Failed" << std::endl;
+      break;
+    }
+    //client_socket_list_.assign(kMAX_CONNECTION_COUNT, 0); // TODO: 커넥션 확장성 고려
 
-  StartEpollThread();
+    StartEpollThread();
 
-  return true;
+    result = true;
+  } while(false);
+
+  return result;
 }
 
 void UnixDomainSocketServer::Finalize() {
@@ -149,7 +154,8 @@ void UnixDomainSocketServer::EpollHandler() {
             std::cout << "Socket Accept Failed" << std::endl;
             continue;
           } else { //  accept ok
-            client_socket_list_[0] = client_socket;
+            const int kREADY_SOCKET =0;
+            //client_socket_list_[client_socket] = kREADY_SOCKET;
 
             std::string connect_signal= "connect";
             std::copy(connect_signal.begin(), connect_signal.end(), message.begin());

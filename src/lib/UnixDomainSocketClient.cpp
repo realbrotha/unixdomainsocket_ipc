@@ -63,6 +63,7 @@ bool UnixDomainSocketClient::StartEpollThread() {
   if (epoll_thread_.get() && epoll_thread_->joinable()) {
     return true;
   }
+
   try {
     epoll_thread_.reset(new std::thread(&UnixDomainSocketClient::EpollHandler, std::ref(*this)));
     result = true;
